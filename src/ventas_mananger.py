@@ -57,3 +57,4 @@ class VentasManager:
             "total": total,
             "venta_id": venta_id
         }
+    

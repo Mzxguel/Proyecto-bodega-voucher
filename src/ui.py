@@ -4,21 +4,20 @@ from .db_manager import DBManager
 from .ventas_mananger import VentasManager
 from .printer import generar_voucher_pdf
 from datetime import datetime
+from PIL import Image, ImageTk
+from tkinter import Tk, Label, PhotoImage
+import os
 
 class AppUI:
     def __init__(self, root):
         self.root = root
-        self.root.title('Bodega POS - Local')
+        self.root.title('Bodega SILMIG - Local')
         self.root.geometry('900x600')
 
         self.db = DBManager()
-        # VentasManager in this project expects the DB manager in its constructor
-        # depending on implementation there are two versions; try to instantiate
-        # with db when possible, fall back to no-arg constructor.
         try:
             self.venta_mgr = VentasManager(self.db)
         except TypeError:
-            # older/newer implementation may not accept db param
             self.venta_mgr = VentasManager()
 
         self.carrito = [] # lista de dicts: producto_id, nombre, cantidad, precio
@@ -27,8 +26,8 @@ class AppUI:
         self._crear_widgets()
 
     def _crear_widgets(self):
-        # Menu superior
-        menu_frame = tk.Frame(self.root)
+        # === Menú superior ===
+        menu_frame = tk.Frame(self.root, bg="#f0f0f0")
         menu_frame.pack(fill='x', pady=6)
 
         tk.Button(menu_frame, text='Modo: Agregar Producto', command=self.modo_agregar).pack(side='left', padx=6)
@@ -36,11 +35,28 @@ class AppUI:
         tk.Button(menu_frame, text='Administrar Productos', command=self.abrir_admin).pack(side='left', padx=6)
         tk.Button(menu_frame, text='Ver Vouchers', command=self.abrir_vouchers).pack(side='left', padx=6)
 
-        # Area central
+        # === LOGO DE LA BODEGA EN ESQUINA SUPERIOR DERECHA ===
+        try:
+            # Obtener ruta absoluta del logo
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            logo_path = os.path.join(base_dir, "..", "assets", "imgSilmig.jpg")
+
+            # Cargar y redimensionar imagen
+            logo_img = Image.open(logo_path)
+            logo_img = logo_img.resize((80, 80))  # Ajusta el tamaño
+            self.logo_photo = ImageTk.PhotoImage(logo_img)
+
+            # Crear etiqueta y colocarla a la derecha del menú
+            logo_label = tk.Label(menu_frame, image=self.logo_photo, bg="#f0f0f0")
+            logo_label.pack(side='right', padx=10)
+        except Exception as e:
+            print(f"⚠️ No se pudo cargar el logo: {e}")
+
+        # === Área central ===
         self.main_frame = tk.Frame(self.root)
         self.main_frame.pack(fill='both', expand=True)
 
-        # Por defecto modo vender
+        # Por defecto: modo vender
         self.modo_vender()
 
     def limpiar_main(self):
